@@ -15,9 +15,11 @@ const {
   useMultiFileAuthState,
   msgRetryCounterMap,
 } = require("@adiwajshing/baileys");
+require("dotenv").config();
 const { Configuration, OpenAIApi } = require("openai");
+
 const configuration = new Configuration({
-  apiKey: "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",
+  apiKey: process.env.API_KEY,
 });
 const generateText = async (prompt) => {
   try {
@@ -25,15 +27,17 @@ const generateText = async (prompt) => {
     const response = await openai.createCompletion({
       model: "text-davinci-003",
       prompt: prompt,
-      temperature: 0,
-      max_tokens: 500,
+      temperature: 0.9,
+      max_tokens: 2048,
     });
     const text = response?.data?.choices?.[0]?.text ?? "tidak tahu";
 
+    console.log(text);
     return text;
   } catch (error) {
+    console.log(error.message);
     // tangani error dengan cara yang tepat
-    return error;
+    return error.response.statusText;
   }
 };
 const log = (pino = require("pino"));
@@ -170,6 +174,7 @@ async function connectToWhatsApp() {
         if (!messages[0].key.fromMe && pesanMasuk.startsWith(".ai")) {
           const prompt = pesanMasuk.slice(4);
           const text = await generateText(prompt);
+          console.log(text);
           await sock.sendMessage(messages[0].key.remoteJid, { text: text });
         } else {
           await sock.sendMessage(
